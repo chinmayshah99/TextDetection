@@ -15,16 +15,17 @@ from numpy import *
 import numpy
 import math
 import cv2
-import cv2.cv as cv
+
 from decimal import *
 from matplotlib import pyplot as plt
 
 def swt(name, searchDirection):
 
-    src = cv2.imread(name)
+    src = cv2.imread(name,0)
     
     # gray image
-    imgray = cv2.cvtColor(src, cv2.COLOR_BGR2GRAY)
+    #imgray = cv2.cvtColor(src, cv2.COLOR_BGR2GRAY)-
+    imgray = src
     #cv2.imwrite("gray.jpg", imgray)
     #cv2.imshow("gray", imgray)
     """
@@ -46,7 +47,7 @@ def swt(name, searchDirection):
 
     # Find edges using canny edge detector
     edgeMap = cv2.Canny(imgray, 100, 300)
-    #cv2.imwrite("canny.jpg", edgeMap)
+    cv2.imwrite("canny.jpg", edgeMap)
 
     """ vis = cv2.cvtColor(vis, cv2.COLOR_BGR2GRAY)
     final = vis & edgeMap
@@ -81,12 +82,12 @@ def swt(name, searchDirection):
         for col in range(width):
             if(edgeMap[row][col] > 0):
                 theta[row][col] = math.atan2(dy[row][col], dx[row][col])
-    #cv2.imwrite("theta.jpg", theta)
-    print theta
+    cv2.imwrite("theta.jpg", theta)
+    #print (theta)
 
     # initializing stroke width array with infinity
     swtMap = 255*ones(imgray.shape, uint8)
-    #print swtMap
+    #print (swtMap)
 
     # Set the maximum stroke width. this number is variable for now but must be
     # made to be more dynamic in the future
@@ -96,7 +97,7 @@ def swt(name, searchDirection):
     strokePointsX = zeros(size(edgePointCols))
     strokePointsY = zeros(size(strokePointsX))
     sizeOfStrokePoints = 0
-    #print len(strokePointsX), len(strokePointsY)
+    #print (len(strokePointsX), len(strokePointsY))
     
     # Iterate through all edge points and compute stoke widths
     for i in range(size(edgePointRows)):
@@ -118,8 +119,8 @@ def swt(name, searchDirection):
 
         # follow the ray
         while step < maxStrokeWidth:
-            nextX = numpy.round(initialX + cos(initialTheta) * searchDirection * step)
-            nextY = numpy.round(initialY + sin(initialTheta) * searchDirection * step)
+            nextX = int(numpy.round(initialX + cos(initialTheta) * searchDirection * step))
+            nextY = int(numpy.round(initialY + sin(initialTheta) * searchDirection * step))
 
             step += 1
             
@@ -130,12 +131,13 @@ def swt(name, searchDirection):
             # record next point of the ray
             pointOfRayX[sizeOfRay] = nextX
             pointOfRayY[sizeOfRay] = nextY
+            #print(nextX,nextY)
 
             # increase size of the ray
             sizeOfRay += 1
 
             # another edge pixel has been found
-            if edgeMap[nextX][nextY]:
+            if (edgeMap[nextX][nextY]):
                 oppositeTheta = theta[nextX][nextY]
 
                 # gradient direction roughly opposite
@@ -165,8 +167,8 @@ def swt(name, searchDirection):
     # Refer to figure 4b in the paper.
     for i in range(sizeOfStrokePoints):
         step = 1
-        initialX = strokePointsX[i]
-        initialY = strokePointsY[i]
+        initialX = int(strokePointsX[i])
+        initialY = int(strokePointsY[i])
         initialTheta = theta[initialX][initialY]
         sizeOfRay = 0
         pointOfRayX = array(random.randint(0, 1, maxStrokeWidth))
@@ -188,8 +190,8 @@ def swt(name, searchDirection):
         
         # follow the ray
         while step < maxStrokeWidth:
-            nextX = round(initialX + cos(initialTheta) * searchDirection * step)
-            nextY = round(initialY + sin(initialTheta) * searchDirection * step)
+            nextX = int(round(initialX + cos(initialTheta) * searchDirection * step))
+            nextY = int(round(initialY + sin(initialTheta) * searchDirection * step))
 
             step += 1
 
@@ -215,17 +217,18 @@ def swt(name, searchDirection):
         for j in range(sizeOfRay):
             swtMap[pointOfRayX[j]][pointOfRayY[j]] = min(swtMap[pointOfRayX[j]][pointOfRayY[j]], strokeWidth)
 
-    #cv2.imwrite("swt_pass2.jpg", swtMap)
+    cv2.imwrite("swt_pass2.jpg", swtMap)
     titles = ['ORIG', 'Canny', 'GradientX', 'GradientY', 'Theta','swt']
     images = [src, edgeMap, dx, dy, theta, swtMap]
 
-    for i in xrange(6):
+    for i in range(6):
         plt.subplot(2,3,i+1),plt.imshow(images[i],'gray')
         plt.title(titles[i])
         plt.xticks([]),plt.yticks([])
 
     plt.show()
     cv2.imwrite("dx.jpg", dx)
-    print sizeOfStrokePoints
+    print (sizeOfStrokePoints)
 
-swt("036.jpg", -1)
+# your file name here
+swt("figure.png", 1) 
